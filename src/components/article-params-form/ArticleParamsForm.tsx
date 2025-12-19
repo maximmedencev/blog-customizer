@@ -5,7 +5,7 @@ import { Text } from 'src/ui/text';
 import { RadioGroup } from 'src/ui/radio-group';
 import { Separator } from 'src/ui/separator';
 
-import { useEffect, useState, RefObject } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import clsx from 'clsx';
 
@@ -23,21 +23,33 @@ import {
 } from 'src/constants/articleProps';
 
 type Props = {
-	articleState: ArticleStateType;
-	onChange: (newState: ArticleStateType) => void;
-	isOpen: boolean;
-	setIsOpen: (open: boolean) => void;
-	formRef: RefObject<HTMLDivElement>;
+	initialState: ArticleStateType;
+	onApply: (newState: ArticleStateType) => void;
 };
 
-export const ArticleParamsForm = ({
-	articleState,
-	onChange,
-	isOpen,
-	setIsOpen,
-	formRef,
-}: Props) => {
-	const [rawState, setRawState] = useState<ArticleStateType>(articleState);
+export const ArticleParamsForm = ({ initialState, onApply }: Props) => {
+	const [isOpen, setIsOpen] = useState(false);
+	const [rawState, setRawState] = useState<ArticleStateType>(initialState);
+	const formRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		setRawState(initialState);
+	}, [initialState]);
+
+	useEffect(() => {
+		if (!isOpen) return;
+
+		const handleClickOutside = (event: MouseEvent) => {
+			if (formRef.current && !formRef.current.contains(event.target as Node)) {
+				setIsOpen(false);
+			}
+		};
+
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, [isOpen]);
 
 	const toggleOpen = () => {
 		setIsOpen(!isOpen);
@@ -50,18 +62,15 @@ export const ArticleParamsForm = ({
 		setRawState((prev) => ({ ...prev, [field]: value }));
 	};
 
-	useEffect(() => {
-		setRawState(articleState);
-	}, [articleState]);
-
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		onChange(rawState);
+		onApply(rawState);
+		setIsOpen(false);
 	};
 
 	const handleReset = (e: React.FormEvent) => {
 		e.preventDefault();
-		onChange(defaultArticleState);
+		onApply(defaultArticleState);
 	};
 
 	return (

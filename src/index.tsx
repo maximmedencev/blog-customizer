@@ -1,6 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { StrictMode, CSSProperties, useState, useEffect, useRef } from 'react';
-import clsx from 'clsx';
+import { StrictMode, CSSProperties, useState } from 'react';
 
 import { Article } from './components/article/Article';
 import { ArticleParamsForm } from './components/article-params-form/ArticleParamsForm';
@@ -18,30 +17,10 @@ const root = createRoot(domNode);
 const App = () => {
 	const [articleState, setArticleState] =
 		useState<ArticleStateType>(defaultArticleState);
-	const [isFormOpen, setIsFormOpen] = useState(false);
-	const formRef = useRef<HTMLDivElement>(null);
-
-	const handleArticleParamsChange = (newState: ArticleStateType) => {
-		setArticleState(newState);
-	};
-
-	useEffect(() => {
-		if (!isFormOpen) return;
-		const handleClickOutside = (event: MouseEvent) => {
-			if (formRef.current && !formRef.current.contains(event.target as Node)) {
-				setIsFormOpen(false);
-			}
-		};
-
-		document.addEventListener('mousedown', handleClickOutside);
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside);
-		};
-	}, [isFormOpen]);
 
 	return (
 		<main
-			className={clsx(styles.main)}
+			className={styles.main}
 			style={
 				{
 					'--font-family': articleState.fontFamilyOption.value,
@@ -52,11 +31,8 @@ const App = () => {
 				} as CSSProperties
 			}>
 			<ArticleParamsForm
-				articleState={articleState}
-				onChange={handleArticleParamsChange}
-				isOpen={isFormOpen}
-				setIsOpen={setIsFormOpen}
-				formRef={formRef}
+				initialState={articleState}
+				onApply={setArticleState}
 			/>
 			<Article />
 		</main>
